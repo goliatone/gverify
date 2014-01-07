@@ -26,12 +26,10 @@
 *.deb
 *.rpm
 
-
 ### SublimeText
 
 # SublimeText project files
 *.sublime-workspace
-
 
 ### OSX
 
@@ -47,4 +45,6 @@ Icon
 .Spotlight-V100
 .Trashes
 
-
+# Composer
+vendor/*
+composer.lock
