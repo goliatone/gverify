@@ -1,4 +1,4 @@
-<?php
+<?php namespace goliatone\support;
 
 /**
  * TODO: Implement processors and filters as
