@@ -1,0 +1,47 @@
+{
+    "name": "goliatone/verify",
+    "description": "Verify system requirements.",
+    "type": "library",
+    "keywords": ["verify", "sytem requirements"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "goliatone",
+            "email": "hello@goliatone.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "goliatone\\support": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "require-dev": {
+        "funkatron/funit": ">=0.3",
+        "dotink/sage":"dev-master"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "git@github.com:funkatron/FUnit.git"
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "dotink/sage",
+                "version": "master",
+                "autoload": {"classmap": ["src/"]},
+                "source": {
+                    "url": "git://github.com/dotink/sage.git",
+                    "type": "git",
+                    "reference": "master"
+                }
+            }
+        }
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
