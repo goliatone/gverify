@@ -20,14 +20,36 @@
 class Verify
 {
 
+    /**
+     * @var string
+     */
     public static $vtemplate;
+
+    /**
+     * @var array
+     */
     public static $vprocessors = array();
 
+    /**
+     * Template for rendering individual
+     * assertion results.
+     *
+     * @param string $template Template
+     *
+     * @return void
+     */
     public static function setTemplate($template)
     {
         self::$vtemplate = $template;
     }
 
+    /**
+     * Initialize a verification chain.
+     *
+     * @param string $label Label ID for test.
+     *
+     * @return Verify
+     */
     public static function that($label)
     {
         //TODO: We might want to hold this one
@@ -48,8 +70,8 @@ class Verify
     protected $_alias  = null;
     protected $_args   = null;
     //We would want to exclude this from context
-    protected $messages = array();
-    protected $processors = array();
+    protected $_messages = array();
+    protected $_processors = array();
 
     public function __construct($label)
     {
@@ -59,7 +81,7 @@ class Verify
             return $v->status   = $v->result ? 'success' : 'fail';
         });
         $this->providing('message', function ($v) {
-            return $v->message  = $v->messages[$v->status];
+            return $v->message  = $v->_messages[$v->status];
         });
     }
 
@@ -79,19 +101,29 @@ class Verify
     public function success($message)
     {
         //TODO: Accept a callable $message.
-        $this->messages['success'] = $message;
+        $this->_messages['success'] = $message;
         return $this;
     }
 
+    /**
+     * @param $message mixed Either a string message or a callable
+     * @return $this
+     */
     public function fail($message)
     {
         // TODO: Accept a callable $message
         // that way we can implement GUnit
         // assertions, we throw error on fail.
-        $this->messages['fail'] = $message;
+        $this->_messages['fail'] = $message;
         return $this;
     }
 
+    /**
+     * @param $key
+     * @param $args
+     * @return mixed
+     * @throws BadMethodCallException
+     */
     public function __call($key, $args)
     {
 
@@ -129,7 +161,11 @@ class Verify
     }
 
 
-
+    /**
+     * @param callable $callback
+     * @return $this
+     * @throws InvalidArgumentException
+     */
     public function check(callable $callback)
     {
         if (!is_callable($callback)) {
@@ -165,12 +201,17 @@ class Verify
         return $this;
     }
 
-
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->compile();
     }
 
+    /**
+     *
+     */
     public function __destruct()
     {
         //Cheap way to print without
@@ -179,16 +220,31 @@ class Verify
         return $this->compile();
     }
 
-
-
-    //TODO: do we want to rename to SET?
+    /**
+     * TODO: do we want to rename to SET?
+     *
+     * @param string $key   String to be replaced on template.
+     * @param mixed  $value Value that will be replaced with.
+     *
+     * @return $this
+     */
     public function providing($key, $value = null)
     {
         if(defined($key)) $value = constant($key);
-        $this->processors[$key] = $value;
+        $this->_processors[$key] = $value;
         return $this;
     }
-    //TODO: Do we want to merge this into providing method?
+
+    /**
+     * TODO: Do we want to merge this into providing method?
+     *
+     * @param string $key    String matching token to be replaced.
+     * @param mixed  $value  Actual value for string.
+     * @param bool   $global Flag indicating if will be a global
+     *                       value.
+     *
+     * @return $this
+     */
     public function bind($key, $value = null, $global = null)
     {
         if(defined($key)) $value = constant($key);
@@ -205,6 +261,13 @@ class Verify
 ///       which is good.
 /////////////////////////////////////////
 
+    /**
+     * Compile method
+     *
+     * @param bool $echo Echo to screen
+     *
+     * @return $this
+     */
     public function compile($echo = true)
     {
 
@@ -222,10 +285,15 @@ class Verify
         return $this;
     }
 
+    /**
+     * Generate context used in string interpolation
+     *
+     * @return array
+     */
     public function generateContext()
     {
         $properties = get_object_vars($this);
-        $processors = array_replace_recursive(self::$vprocessors, $this->processors);
+        $processors = array_replace_recursive(self::$vprocessors, $this->_processors);
 
         // print_r($processors).PHP_EOL;
         // exit;
@@ -235,10 +303,19 @@ class Verify
             else $properties[$key] = $value;
         }
 
-
         return $properties;
     }
 
+    /**
+     * Simple string interpolation. It will replace tokens
+     * sorrounded by `{` and `}` tags.
+     *
+     * @param string $message Template containing tokens.
+     * @param array $context  Provides content to replace
+     *                        tokens.
+     *
+     * @return string
+     */
     public function interpolate($message, array $context = array())
     {
         if (strpos($message, '{{') === false) {
@@ -253,22 +330,47 @@ class Verify
         //mb_strstr
         return @strtr($message, $replace);
     }
+
 ////////////////////////////////////////
 /// BASIC FILTERS
 /// TODO: Append from external provider
 ///       use(baseAssertionAndFilters)
 ////////////////////////////////////////
 
+    /**
+     * Filter implementing logic
+     * AND
+     * @param bool $old Value before current test
+     * @param bool $value  Value of current test
+     *
+     * @return bool
+     */
     public function _and($old, $value)
     {
         return $old && $value;
     }
 
+    /**
+     * Filter implementing logic
+     * OR
+     * @param bool $old Value before current test
+     * @param bool $value  Value of current test
+     *
+     * @return bool
+     */
     public function _or($old, $value)
     {
         return $old || $value;
     }
 
+    /**
+     * Filter negates (!) current test
+     *
+     * @param bool $old Value before current test
+     * @param bool $value  Value of current test
+     *
+     * @return bool
+     */
     public function _not($old, $value)
     {
         return !$value;
